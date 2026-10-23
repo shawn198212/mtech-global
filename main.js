@@ -187,6 +187,112 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+/* =========================================================
+   HOME LANDING PANELS
+========================================================= */
+
+(function () {
+  // The Home landing is intentionally static; no carousel behavior.
+  return;
+
+  const hero = document.querySelector('.hero');
+  const cover = document.querySelector('.home-cover-slide');
+  const panels = [...document.querySelectorAll('.landing-slide')];
+  const dots = [...document.querySelectorAll('.landing-dot')];
+  const previous = document.querySelector('.landing-prev');
+  const next = document.querySelector('.landing-next');
+
+  if (!hero || !cover || panels.length === 0 || !previous || !next) return;
+
+  const total = panels.length + 1;
+  const autoplayDelay = 3000;
+  let current = 0;
+  let autoplayTimer;
+
+  function showPanel(index) {
+    current = (index + total) % total;
+    cover.hidden = current !== 0;
+
+    panels.forEach((panel, panelIndex) => {
+      panel.classList.toggle('is-active', panelIndex + 1 === current);
+    });
+
+    dots.forEach((dot, dotIndex) => {
+      const active = dotIndex === current;
+      dot.classList.toggle('is-active', active);
+      dot.setAttribute('aria-selected', String(active));
+    });
+  }
+
+  function startAutoplay() {
+    clearInterval(autoplayTimer);
+    autoplayTimer = setInterval(() => showPanel(current + 1), autoplayDelay);
+  }
+
+  previous.addEventListener('click', () => {
+    showPanel(current - 1);
+    startAutoplay();
+  });
+  next.addEventListener('click', () => {
+    showPanel(current + 1);
+    startAutoplay();
+  });
+  dots.forEach((dot) => {
+    dot.addEventListener('click', () => {
+      showPanel(Number(dot.dataset.homeTarget));
+      startAutoplay();
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      showPanel(current - 1);
+      startAutoplay();
+    }
+    if (event.key === 'ArrowRight') {
+      showPanel(current + 1);
+      startAutoplay();
+    }
+  });
+
+  hero.addEventListener('mouseenter', () => clearInterval(autoplayTimer));
+  hero.addEventListener('mouseleave', startAutoplay);
+  hero.addEventListener('focusin', () => clearInterval(autoplayTimer));
+  hero.addEventListener('focusout', (event) => {
+    if (!hero.contains(event.relatedTarget)) startAutoplay();
+  });
+
+  showPanel(0);
+  startAutoplay();
+})();
+
+
+/* =========================================================
+   FIXED-HEADER SECTION NAVIGATION
+========================================================= */
+
+document.querySelectorAll('a[href^="#"]').forEach((link) => {
+  link.addEventListener('click', (event) => {
+    const targetId = link.getAttribute('href');
+    const target = document.querySelector(targetId);
+
+    if (!target) return;
+
+    event.preventDefault();
+
+    const header = document.querySelector('.site-header');
+    const headerHeight = header ? header.offsetHeight : 0;
+    const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+
+    window.history.replaceState(null, '', targetId);
+    window.scrollTo({
+      top: Math.max(0, targetTop),
+      behavior: 'smooth'
+    });
+  });
+});
+
+
 
 
 
@@ -198,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
 ========================================================= */
 
 const revealItems = document.querySelectorAll(
-  '.sec-head, .two, .stat, .hist-card, .cert-card, ' +
+  '.sec-head, .two, .stat, .cert-card, ' +
   '.why-list li, .pcard, .opt, .bank-grid li, .step, ' +
   '.office, .gallery li, .listcard, .benefits li, .division'
 );
